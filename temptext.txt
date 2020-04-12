@@ -1,1 +1,2 @@
 This is a temporary file created to test git features
+Edited from B1 branch
