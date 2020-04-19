@@ -1,0 +1,46 @@
+pipeline {
+        agent any
+        stages {
+            stage('SCM Checkout') {
+                steps {
+                // Checking out from GIT server at particular branch
+                git branch: 'qabranch', url:'https://github.com/jkjit/hellowebworld.git'}
+            }
+            stage('Compile Project'){
+                steps {
+		    script{
+                	//Get MAVEN HOME PATH
+                    	def mvnHome = tool name: 'mymvn3', type: 'maven'
+                    	sh "${mvnHome}/bin/mvn clean package"
+		    }
+		}
+
+            }
+            stage('Docker build'){
+                steps {
+                //Building docker image from git
+                sh "docker build -t jkckdocker/hellowebworld:latest -t jkckdocker/hellowebworld:${currentBuild.number} ."}
+            }
+            stage('Docker Push'){
+                steps {
+		  script{
+		        withCredentials([usernameColonPassword(credentialsId: 'DOCKER_USER_PWD', variable: 'DOCKER_CREDENTIALS')]){
+		        // pushing docker images to docker hub
+		        sh """
+		          docker push jkckdocker/hellowebworld:${currentBuild.number}
+  	              docker push jkckdocker/hellowebworld:latest
+		        """ 
+			}
+		    }
+		}
+            }
+            stage('Clean up'){
+                steps {
+                // clearing docker images created inside jenkins server to save space
+                sh """
+                    docker rmi jkckdocker/hellowebworld:${currentBuild.number}
+                    docker rmi jkckdocker/hellowebworld:latest
+                """ }
+            }
+        }
+}

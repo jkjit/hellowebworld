@@ -1,0 +1,33 @@
+node {
+  stage('SCM Checkout') {
+        git branch: 'qabranch', url:'https://github.com/jkjit/hellowebworld.git'
+        }
+   stage('Compile Project'){
+     //Get MAVEN HOME PATH
+     def mvnHome = tool name: 'mymvn3', type: 'maven'
+     sh "${mvnHome}/bin/mvn clean package"
+       }
+  stage('Docker build'){
+    //Building docker image from git
+    sh "docker build -t jkckdocker/hellowebworld:latest -t jkckdocker/hellowebworld:${currentBuild.number} ."
+  }
+  stage('Docker Push'){
+  withCredentials([string(credentialsId: 'DOCKER_PWD', variable: 'DOCKER_PWD')]) {
+    
+    sh """
+
+      docker login -u jkckdocker -p ${DOCKER_PWD}
+      docker push jkckdocker/hellowebworld:${currentBuild.number}
+      docker push jkckdocker/hellowebworld:latest
+      
+    """ 
+}   
+  }
+  stage('Clean up'){
+    sh """
+      docker rmi jkckdocker/hellowebworld:${currentBuild.number}
+      docker rmi jkckdocker/hellowebworld:latest
+      """
+  }
+
+}
