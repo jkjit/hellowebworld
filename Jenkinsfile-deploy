@@ -28,7 +28,7 @@ pipeline {
 		        // pushing docker images to docker hub
 		        sh """
 		          docker push jkckdocker/hellowebworld:${currentBuild.number}
-  	              docker push jkckdocker/hellowebworld:latest
+  	              	  docker push jkckdocker/hellowebworld:latest
 		        """ 
 			}
 		    }
@@ -39,6 +39,7 @@ pipeline {
                 // clearing docker images created inside jenkins server to save space
                 sh """
                     docker rmi jkckdocker/hellowebworld:${currentBuild.number}
+		    docker rmi jkckdocker/hellowebworld:latest
                 """ }
             }
             stage('Deploy'){
