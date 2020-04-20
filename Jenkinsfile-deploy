@@ -19,7 +19,7 @@ pipeline {
             stage('Docker build'){
                 steps {
                 //Building docker image from git
-                sh "docker build -t jkckdocker/hellowebworld:latest -t jkckdocker/hellowebworld:${currentBuild.number} ."}
+                sh "docker build -t jkckdocker/hellowebworld:${currentBuild.number} ."}
             }
             stage('Docker Push'){
                 steps {
@@ -28,24 +28,15 @@ pipeline {
 		        // pushing docker images to docker hub
 		        sh """
 		          docker push jkckdocker/hellowebworld:${currentBuild.number}
-  	              docker push jkckdocker/hellowebworld:latest
 		        """ 
 			}
 		    }
 		}
             }
-            stage('Clean up'){
-                steps {
-                // clearing docker images created inside jenkins server to save space
-                sh """
-                    docker rmi jkckdocker/hellowebworld:${currentBuild.number}
-		            docker rmi jkckdocker/hellowebworld:latest
-                """ }
-            }
             stage('Deploy'){
                 steps {
                 // Running the docker image with name as testbed and initiating hellowebworld project
-                sh "docker run -d -p 8085:8080  --name testbed jkckdocker/hellowebworld"
+                sh "docker run -d -p 8085:8080  --name testbed jkckdocker/hellowebworld:${currentBuild.number}"
 			}
             }
 
@@ -57,12 +48,20 @@ pipeline {
                     . jk-venv/bin/activate
                     pip install -r requirements.txt
                     pytest -sv automation
-                    deactivate
-                    docker stop testbed
-                    docker rm testbed
+                    deactivate                    
                     """
 
                 }
+            }
+        
+            stage('Clean up'){
+                steps {
+                // clearing docker images created inside jenkins server to save space
+                sh """
+                    docker stop testbed
+                    docker rm testbed
+                    docker rmi jkckdocker/hellowebworld:${currentBuild.number}
+                """ }
             }
         }
 }
