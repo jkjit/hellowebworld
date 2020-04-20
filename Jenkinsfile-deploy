@@ -28,7 +28,7 @@ pipeline {
 		        // pushing docker images to docker hub
 		        sh """
 		          docker push jkckdocker/hellowebworld:${currentBuild.number}
-  	              	  docker push jkckdocker/hellowebworld:latest
+  	              docker push jkckdocker/hellowebworld:latest
 		        """ 
 			}
 		    }
@@ -39,18 +39,14 @@ pipeline {
                 // clearing docker images created inside jenkins server to save space
                 sh """
                     docker rmi jkckdocker/hellowebworld:${currentBuild.number}
-		    docker rmi jkckdocker/hellowebworld:latest
+		            docker rmi jkckdocker/hellowebworld:latest
                 """ }
             }
             stage('Deploy'){
                 steps {
-                // 
-                sh """
-                    docker stop testbed
-                    docker rm testbed
-                    docker run -d -p 8085:8080  --name testbed jkckdocker/hellowebworld 
-
-                """ }
+                // Running the docker image with name as testbed and initiating hellowebworld project
+                sh "docker run -d -p 8085:8080  --name testbed jkckdocker/hellowebworld"
+			}
             }
 
             stage('FT'){
@@ -59,9 +55,11 @@ pipeline {
                     sh """
                     virtualenv -p /usr/bin/python3.6 jk-venv
                     . jk-venv/bin/activate
-                    python -V
                     pip install -r requirements.txt
                     pytest -sv automation
+                    deactivate
+                    docker stop testbed
+                    docker rm testbed
                     """
 
                 }
