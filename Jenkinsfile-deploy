@@ -44,7 +44,7 @@ pipeline {
                 steps {
 
                     sh """
-                    virtualenv -p /usr/bin/python3.6 jk-venv
+                    virtualenv -p /usr/bin/python3.8 jk-venv
                     . jk-venv/bin/activate
                     pip install -r requirements.txt
                     pytest -sv automation
